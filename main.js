@@ -1,4 +1,4 @@
-const apiKey = '05d3d022d7bb435b9fd100532252509';
+const apiKey = '04b2b7bf589e4fadb16142603252310';
 const cityInput = document.getElementById('city-input');
 const searchButton = document.getElementById('search-button');
 const currentTimeElement = document.getElementById('current-time');
@@ -57,7 +57,7 @@ async function fetchWeather(city) {
     weatherMain.style = 'none';
     weatherDetails.style = 'none';
     try {
-        const response = await fetch(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}&aqi=yes`);
+        const response = await fetch(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}&aqi=yes`);
         
         if (!response.ok) {
             throw new Error(`API isteği başarısız oldu: ${response.status}`);
