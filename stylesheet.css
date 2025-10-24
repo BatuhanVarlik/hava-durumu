@@ -1,54 +1,155 @@
+/* Genel Stiller ve Arka Plan */
 body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f172a, #312e81);
+    color: #e2e8f0;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    
+    margin: 0;
+    padding: 1rem;
+    box-sizing: border-box;
 }
-.weather-container{
 
-    background: linear-gradient(135deg,#6a72fb,#fc5c7d);
-    color: white;
-    max-width:450px;
-    padding:30px;
-    border-radius: 20px;
-    box-shadow: 0 15px 30px rgba(red, green, blue, alpha);
-    text-align: center;
+/* Ana Konteyner */
+.weather-container {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem; /* Daha yuvarlak köşeler */
+    padding: 2rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
-#weather-app{
+
+/* Arama Çubuğu ve Buton */
+#weather-app {
     display: flex;
-    gap: 10px;
+    gap: 0.5rem; /* Arada boşluk */
+    margin-bottom: 1.5rem;
 }
-#city-input{
-    flex-grow:1;
-}
-#search-button{
-    border:none;
-    background-color: #ffc107;
-    cursor:pointer; /* cursoru değiştirme koud */
 
+#city-input {
+    flex-grow: 1; /* Input'un genişlemesini sağlar */
+    padding: 0.75rem 1rem;
+    border: 1px solid #334155;
+    border-radius: 0.75rem;
+    background: #1e293b;
+    color: #e2e8f0;
+    font-size: 1rem;
+    outline: none; /* Tıklama çerçevesini kaldır */
 }
-#city-name{
-    font-size: 2.5rem;
-    justify-content: center;
+#city-input::placeholder {
+    color: #64748b;
+}
+#city-input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.5);
+}
+
+#search-button {
+    padding: 0.75rem 1.25rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+}
+#search-button:hover {
+    background: #4338ca;
+}
+
+/* Saat Kutusu */
+#time-box {
+    text-align: right;
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin: -0.5rem 0 1.5rem 0;
+}
+#time-box span {
+    font-weight: 500;
+    color: #e2e8f0;
+}
+
+/* İçerik Alanı */
+#weather-content-area {
     text-align: center;
-
 }
-#temperature {
-    font-size: 4rem;
-    font-weight:bold;
+
+/* Başlangıç, Yükleniyor, Hata Mesajları */
+#initial-message p, #loading-message p {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    padding: 2rem 0;
+}
+#error-message {
+    background: #7f1d1d; /* Koyu kırmızı */
+    color: #fca5a5;
+    padding: 1rem;
+    border-radius: 0.75rem;
+}
+
+/* Ana Hava Durumu Bilgisi */
+.weather-main {
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 2rem;
+}
+#city-name {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 0;
 }
 #weather-icon {
-float: center;
-width: 128px;
-height: 128px;
-
+    width: 100px;
+    height: 100px;
+    margin: 0.5rem auto;
 }
+#condition-text {
+    font-size: 1.25rem;
+    color: #cbd5e1;
+    margin: 0.5rem 0;
+}
+#temperature {
+    font-size: 3rem;
+    font-weight: 300;
+    margin: 0;
+}
+#temperature span {
+    font-weight: 700;
+}
+
+/* Hava Durumu Detayları */
 .weather-details {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 1.25rem;
     text-align: left;
 }
+.detail-label {
+    background: rgba(30, 41, 59, 0.7);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+.detail-value {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #e2e8f0;
+    margin-top: 0.25rem;
+}
 
+/* Yardımcı Sınıf */
+.hidden {
+    display: none !important;
+}

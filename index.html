@@ -1,39 +1,41 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>weather</title>
+    <title>Hava Durumu (Dinamik Render)</title>
+    <!-- Stil dosyası hala geçerli -->
     <link rel="stylesheet" href="stylesheet.css">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
+
     <div class="weather-container">
+        
+        <!-- Arama Bölümü (Bu statik kalabilir) -->
         <div id="weather-app">
             <input type="text" name="city" id="city-input" placeholder="Şehir adı girin">
             <button id="search-button">Hava Durumunu Getir</button>
         </div>
-        <p id="time-box">Saat<br><span id="current-time"></span></p>
+        
+        <!-- Saat Kutusu (Bu da statik, içi JS ile dolacak) -->
+        <p id="time-box">Saat<br><span id="current-time">--:--:--</span></p>
 
-        <div class="weather-main">
-            <h2 id="city-name"></h2>
-            <img id="weather-icon" src="" alt="Hava Durumu Simgesi">
-            <p id="condition-text"></p>
-            <p id="temperature">Sıcaklık  <span id="temp-c"></span>°C</p>
+        <!-- 
+          DİNAMİK İÇERİK ALANI
+          Tüm HTML (hata, yükleniyor, veri) 'innerHTML' ile buraya basılacak.
+        -->
+        <div id="weather-content-area">
+            <!-- Başlangıçta boş, ama JS ilk render'da dolduracak -->
         </div>
-        <div class="weather-details">
-            <p class="detail-label">Hissedilen Sıcaklık: <span class="detail-value" id="feels-like-value"></span>°C</p>
-            <p class="detail-label">Nem: <span class="detail-value" id="humidity-value"></span>%</p>
-            <p class="detail-label">Rüzgar: <span class="detail-value" id="wind-value"></span> km/s</p>
-            <p class="detail-label">Rüzgar Yönü:<span class="detail-value" id="wind-dir-value"></span></p>
-            <p class="detail-label">Görüş Mesafesi: <span class="detail-value" id="visibility-value"></span> km</p>
-            <p class="detail-label">UV İndeksi: <span class="detail-value" id="uv-index-value"></span></p>
-            <p class="detail-label">Yağış: <span class= "detail-value" id="precipitation-value"></span> mm</p>
-        </div>
+
     </div>
 
+    <!-- JavaScript dosyamız -->
     <script src="main.js"></script>
 </body>
-
 </html>
+

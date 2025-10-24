@@ -1,156 +1,203 @@
-const apiKey = '04b2b7bf589e4fadb16142603252310';
-const cityInput = document.getElementById('city-input');
-const searchButton = document.getElementById('search-button');
-const currentTimeElement = document.getElementById('current-time');
-const weatherMain = document.querySelector('.weather-main');
-const weatherDetails = document.querySelector('.weather-details')
+const API_KEY = '04b2b7bf589e4fadb16142603252310';
+// --- API Ayarı ---
+// Lütfen weatherapi.com'dan aldığınız API anahtarınızı buraya girin
 
-function getTime(){
-    const rightNow = new Date();
-    const yil = rightNow.getFullYear();
-    const ay = rightNow.getMonth() + 1;
-    const gün = rightNow.getDate();
-    const saat = rightNow.getHours().toString().padStart(2,'0');
-    const dakika = rightNow.getMinutes().toString().padStart(2,'0');;
-    const saniye = rightNow.getSeconds().toString().padStart(2,'0');;
-    const anlikZaman  = `${gün}/${ay}/${yil}<br>${saat}:${dakika}:${saniye}`;
-    currentTimeElement.innerHTML = anlikZaman;
+
+// --- 1. STATE (DURUM) ---
+// "Gerçeğin tek kaynağı"
+let appState = {
+    currentTime: new Date(),
+    isLoading: false,
+    error: null,
+    weatherData: null 
+};
+
+// --- 2. DOM ELEMENTLERİNİ SEÇME ---
+// Sadece 'statik' ve 'giriş noktası' olan elementleri seçiyoruz.
+const cityInputEl = document.getElementById('city-input');
+const searchButtonEl = document.getElementById('search-button');
+const currentTimeEl = document.getElementById('current-time');
+const contentAreaEl = document.getElementById('weather-content-area'); // <- TÜM İÇERİK BURAYA!
+
+// --- 3. STATE GÜNCELLEME YARDIMCISI ---
+// Bu fonksiyon, state'i günceller ve OTOMATİK OLARAK 'renderApp'i çağırır.
+function setState(newState) {
+    appState = { ...appState, ...newState };
+    // Ekranı yeniden çiz!
+    renderApp();
 }
-setInterval(getTime,1000);
-getTime();
 
-// Bu fonksiyon, API'den gelen veriyi dinamik olarak ekrana basar
-function renderWeatherInfo(data) {
-// genel bilgiler 
-    document.getElementById('city-name').textContent = data.location.name;
-    document.getElementById('weather-icon').src = data.current.condition.icon;
-    document.getElementById('condition-text').textContent = data.current.condition.text;
-    document.getElementById('temp-c').textContent = data.current.temp_c;
-// detaylar 
-    document.getElementById('feels-like-value').textContent = data.current.feelslike_c;
-    document.getElementById('humidity-value').textContent = data.current.humidity;
-    document.getElementById('wind-value').textContent = data.current.wind_kph;
-    document.getElementById('wind-dir-value').textContent = data.current.wind_dir;
-    document.getElementById('visibility-value').textContent = data.current.vis_km;
-    document.getElementById('uv-index-value').textContent = data.current.uv;
-    document.getElementById('precipitation-value').textContent = data.current.precip_mm;
- }
-function clearWeatherInfo() {
-    // Ana Bilgiler
-    document.getElementById('city-name').textContent = '';
-    document.getElementById('weather-icon').src = '';
-    document.getElementById('condition-text').textContent = '';
-    document.getElementById('temp-c').textContent = '';
+// --- 4. HTML OLUŞTURMA FONKSİYONLARI ---
 
-    // Detaylar
-    document.getElementById('feels-like-value').textContent = '';
-    document.getElementById('humidity-value').textContent = '';
-    document.getElementById('wind-value').textContent = '';
-    document.getElementById('wind-dir-value').textContent = '';
-    document.getElementById('visibility-value').textContent = '';
-    document.getElementById('uv-index-value').textContent = '';
-    document.getElementById('precipitation-value').textContent = '';
+/**
+ * .map() ve .join() kullanarak hava durumu detaylarını HTML'e çevirir.
+ * Bu, React'te bir "component" (bileşen) listesi render etmeye benzer.
+ */
+function generateWeatherDetailsHtml(current) {
+    // 1. Önce veriyi .map() için uygun bir diziye dönüştürelim
+    const detailsData = [
+        { label: 'Hissedilen', value: current.feelslike_c, unit: '°C' },
+        { label: 'Nem', value: current.humidity, unit: '%' },
+        { label: 'Rüzgar', value: current.wind_kph, unit: ' km/s' },
+        { label: 'Rüzgar Yönü', value: current.wind_dir, unit: '' },
+        { label: 'Görüş Mesafesi', value: current.vis_km, unit: ' km' },
+        { label: 'UV İndeksi', value: current.uv, unit: '' },
+        { label: 'Yağış', value: current.precip_mm, unit: ' mm' }
+    ];
+
+    // 2. .map() kullanarak her objeyi bir HTML string'ine dönüştür
+    const htmlArray = detailsData.map(item => {
+        // Not: 'Template literals' (backticks ``) string oluşturmak için çok kullanışlıdır.
+        return `
+            <p class="detail-label">
+                ${item.label}
+                <span class="detail-value">
+                    ${item.value}${item.unit ? ` ${item.unit}` : ''}
+                </span>
+            </p>
+        `;
+    });
+
+    // 3. .join('') kullanarak tüm HTML string'lerinden oluşan diziyi tek bir string yap
+    return htmlArray.join('');
 }
-// Hava durumu verilerini çeken ana fonksiyon
+
+/**
+ * 'weatherData' objesini alıp tüm HTML'i oluşturan ana fonksiyon.
+ */
+function generateWeatherHtml(data) {
+    const { location, current } = data;
+    const iconUrl = `https:${current.condition.icon}`;
+
+    // 1. Ana (weather-main) HTML'i oluştur
+    const mainHtml = `
+        <div class="weather-main">
+            <h2 id="city-name">${location.name}, ${location.region}</h2>
+            <img id="weather-icon" src="${iconUrl}" alt="${current.condition.text}">
+            <p id="condition-text">${current.condition.text}</p>
+            <p id="temperature">Sıcaklık <span id="temp-c">${current.temp_c}</span>°C</p>
+        </div>
+    `;
+
+    // 2. Detay (weather-details) HTML'ini yardımcı fonksiyondan al (.map/.join)
+    const detailsHtml = generateWeatherDetailsHtml(current);
+
+    // 3. İkisini birleştirip tam konteyneri döndür
+    return `
+        <div id="weather-data-container">
+            ${mainHtml}
+            <div class="weather-details">
+                ${detailsHtml}
+            </div>
+        </div>
+    `;
+}
+
+// --- 5. ANA RENDER (GÖRÜNTÜLEME) FONKSİYONU ---
+/**
+ * 'appState'i okur ve 'contentAreaEl.innerHTML'i günceller.
+ * Artık DOM'a dokunan tek yer burası (ve saat).
+ */
+function renderApp() {
+    
+    // a) Saati güncelle (Bu hala ayrı bir element)
+    currentTimeEl.textContent = appState.currentTime.toLocaleTimeString('tr-TR');
+
+    // b) 'contentAreaEl' için HTML'i 'appState'e göre belirle
+    let contentHtml = '';
+
+    if (appState.isLoading) {
+        contentHtml = `<div id="loading-message"><p>Yükleniyor...</p></div>`;
+    } 
+    else if (appState.error) {
+        contentHtml = `<div id="error-message">${appState.error}</div>`;
+    } 
+    else if (appState.weatherData) {
+        // Başarılı: Tüm HTML'i oluşturmak için yardımcı fonksiyonu çağır
+        contentHtml = generateWeatherHtml(appState.weatherData);
+    } 
+    else {
+        // Başlangıç durumu
+        contentHtml = `<div id="initial-message"><p>Lütfen bir şehir arayın.</p></div>`;
+    }
+
+    // c) Oluşturulan HTML'i sayfaya bas
+    contentAreaEl.innerHTML = contentHtml;
+}
+
+// --- 6. OLAY (EVENT) FONKSİYONLARI ---
+
+// API'den veri çekecek fonksiyon (Bu fonksiyon değişmedi)
 async function fetchWeather(city) {
-    clearWeatherInfo();
-    weatherMain.style = 'none';
-    weatherDetails.style = 'none';
+    if (API_KEY === 'YOUR_API_KEY_HERE' || !API_KEY) {
+        setState({ 
+            isLoading: false, 
+            error: 'Lütfen main.js dosyasına API anahtarınızı girin.' 
+        });
+        return;
+    }
+
+    // 1. Yükleniyor durumuna geç (Bu, renderApp'i tetikler)
+    setState({ isLoading: true, error: null, weatherData: null });
+
     try {
-        const response = await fetch(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}&aqi=yes`);
+        const response = await fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${city}&aqi=no&lang=tr`);
         
         if (!response.ok) {
-            throw new Error(`API isteği başarısız oldu: ${response.status}`);
+            // response.statusText gibi genel bir hata
+            throw new Error('Şehir bulunamadı veya bir ağ hatası oluştu.');
         }
-        
+
         const data = await response.json();
-        console.log(data);
 
-        // Hata olmadığında, tüm verileri ekrana basmak için fonksiyonu çağır
-        renderWeatherInfo(data);
-        
-        // weatherMain.style.display = 'flex';
-        // weatherDetails.style.display = 'grid';
+        if (data.error) {
+            // API'den gelen spesifik hata (örn: "No matching location found.")
+             throw new Error(data.error.message);
+        }
 
-    } catch (error) {
-        console.error('Hata:', error);
-        clearWeatherInfo();
-        // Hata durumunda sadece bir hata mesajı göster
-        alert(`Bir hata oluştu: ${error.message}`);
+        // 2. Başarılı: State'i veri ile güncelle (Bu, renderApp'i tetikler)
+        setState({ isLoading: false, weatherData: data });
 
+    } catch (err) {
+        // 3. Hata: State'i hata mesajı ile güncelle (Bu, renderApp'i tetikler)
+        setState({ isLoading: false, error: err.message });
     }
 }
 
-// Butona tıklandığında fonksiyonu çalıştır
-searchButton.addEventListener('click', () => {
-    fetchWeather(cityInput.value);
-});
-
-// Enter tuşuna basıldığında fonksiyonu çalıştır
-cityInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        searchButton.click();
+// Arama butonu tıklama olayı
+function handleSearch() {
+    const city = cityInputEl.value.trim(); // trim() ile boşlukları temizle
+    if (city) {
+        fetchWeather(city);
+    } else {
+        // State üzerinden hata ver
+        setState({ error: 'Lütfen bir şehir adı girin.', weatherData: null });
     }
+}
+
+// --- 7. OLAY DİNLEYİCİLERİ VE BAŞLANGIÇ ---
+
+// Sayfa yüklendiğinde
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Arama butonuna tıklandığında 'handleSearch' fonksiyonunu çağır
+    searchButtonEl.addEventListener('click', handleSearch);
+
+    // Input'ta Enter'a basıldığında 'handleSearch' fonksiyonunu çağır
+    cityInputEl.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
+    });
+
+    // Saati başlatan interval
+    setInterval(() => {
+        // Sadece state'i güncelliyoruz, 'renderApp' gerisini halledecek.
+        setState({ currentTime: new Date() });
+    }, 1000);
+
+    // Başlangıçta uygulamayı bir kez render et (ilk 'state'i ekrana çiz)
+    // Bu, "Lütfen bir şehir arayın." mesajını gösterecek.
+    renderApp();
 });
 
-
-
-
-//     // Önceki içeriği tamamen temizle
-//     weatherInfo.innerHTML = '';
-
-//     // Şehir adı
-//     const cityNameElement = document.createElement('h2');
-//     cityNameElement.textContent = data.location.name;
-//     weatherInfo.appendChild(cityNameElement);
-
-//     // Hava durumu simgesi
-//     const weatherIconElement = document.createElement('img');
-//     weatherIconElement.src = data.current.condition.icon;
-//     weatherIconElement.alt = data.current.condition.text;
-//     weatherInfo.appendChild(weatherIconElement);
-
-//     // Hava durumu metni
-//     const conditionTextElement = document.createElement('p');
-//     conditionTextElement.textContent = data.current.condition.text;
-//     weatherInfo.appendChild(conditionTextElement);
-
-//     // Sıcaklık
-//     const tempElement = document.createElement('p');
-//     tempElement.textContent = `Sıcaklık: ${data.current.temp_c} °C`;
-//     weatherInfo.appendChild(tempElement);
-
-//     // Hissedilen Sıcaklık
-//     const feelsLikeElement = document.createElement('p');
-//     feelsLikeElement.textContent = `Hissedilen Sıcaklık: ${data.current.feelslike_c} °C`;
-//     weatherInfo.appendChild(feelsLikeElement);
-    
-//     // Nem
-//     const humidityElement = document.createElement('p');
-//     humidityElement.textContent = `Nem: ${data.current.humidity} %`;
-//     weatherInfo.appendChild(humidityElement);
-
-//     // Rüzgar Hızı
-//     const windElement = document.createElement('p');
-//     windElement.textContent = `Rüzgar Hızı: ${data.current.wind_kph} km/s`;
-//     weatherInfo.appendChild(windElement);
-
-//     // Rüzgar Yönü
-//     const windDirElement = document.createElement('p');
-//     windDirElement.textContent = `Rüzgar Yönü: ${data.current.wind_dir}`;
-//     weatherInfo.appendChild(windDirElement);
-
-//     // Görüş Mesafesi
-//     const visibilityElement = document.createElement('p');
-//     visibilityElement.textContent = `Görüş Mesafesi: ${data.current.vis_km} km`;
-//     weatherInfo.appendChild(visibilityElement);
-
-//     // UV İndeksi
-//     const uvIndexElement = document.createElement('p');
-//     uvIndexElement.textContent = `UV İndeksi: ${data.current.uv}`;
-//     weatherInfo.appendChild(uvIndexElement);
-
-//     // Yağış Miktarı
-//     const precipElement = document.createElement('p');
-//     precipElement.textContent = `Yağış: ${data.current.precip_mm} mm`;
-//     weatherInfo.appendChild(precipElement);
